@@ -50,27 +50,6 @@ public class RadioActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_radio);
 
-        ComponentName mediaButtonReceiver = new ComponentName(this, RemoteControlReceiver.class);
-        mediaSession = new MediaSessionCompat(this, "Paw Print Radio stream", mediaButtonReceiver, null);
-        mediaSession.setFlags(MediaSessionCompat.FLAG_HANDLES_MEDIA_BUTTONS | MediaSessionCompat.FLAG_HANDLES_TRANSPORT_CONTROLS);
-        mediaSession.setCallback(new StreamingSessionCallback());
-        mediaSession.setActive(true);
-
-        MediaMetadataCompat meta = new MediaMetadataCompat.Builder()
-                .putBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART, BitmapFactory.decodeResource(getResources(), R.drawable.ic_play_arrow_white_24dp))
-                .putString(MediaMetadataCompat.METADATA_KEY_ARTIST, "PPR")
-                .putString(MediaMetadataCompat.METADATA_KEY_ALBUM, "PPR Album").build();
-
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-        fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-
-            }
-        });
-
     }
 
     @Override
@@ -101,5 +80,10 @@ public class RadioActivity extends AppCompatActivity {
             fab.setImageDrawable(getResources().getDrawable(drawableId, getTheme()));
         else
             fab.setImageDrawable(getResources().getDrawable(drawableId));
+    }
+
+    private void setUpMediaPlayer(){
+        mediaPlayer = new MediaPlayer();
+//        mediaPlayer.setDataSource(getResour)
     }
 }

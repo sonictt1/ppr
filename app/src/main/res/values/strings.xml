@@ -2,5 +2,6 @@
     <string name="app_name">Paw Print Radio</string>
     <string name="action_settings">Settings</string>
     <string name="media_player_key">MediaPlayer</string>
-    <string name="stream_url">https://radio.pawprintradio.com/stream</string>
+    <string name="stream_url">https://radio.pawprintradio.com/icecast/radio.mp3</string>
+    <string name="stream_api">https://radio.pawprintradio.com/icecast/status-json.xsl</string>
 </resources>

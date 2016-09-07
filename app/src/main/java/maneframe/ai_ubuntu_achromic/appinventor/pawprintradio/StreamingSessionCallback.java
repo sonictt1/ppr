@@ -75,6 +75,7 @@ public class StreamingSessionCallback extends MediaSessionCompat.Callback {
 
     public PlaybackStateCompat getPlayState()
     {
-        
+        return new PlaybackStateCompat.Builder()
+                .build();
     }
 }

@@ -49,7 +49,22 @@ public class RadioActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_radio);
+        try {
+            mediaPlayer.setDataSource(getResources().getString(R.string.stream_url));
+        } catch (IOException e) {
+            Log.e("media player source", "exception", e);
+        }
 
+        mediaPlayer.prepareAsync();
+
+        fab = (FloatingActionButton) findViewById(R.id.fab);
+        fab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                mediaPlayer.start();
+                setFabIcon(R.drawable.ic_pause_white_24dp);
+            }
+        });
     }
 
     @Override

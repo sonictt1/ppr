@@ -6,6 +6,7 @@ import android.graphics.BitmapFactory;
 import android.media.MediaPlayer;
 import android.support.v4.media.MediaMetadataCompat;
 import android.support.v4.media.session.MediaSessionCompat;
+import android.support.v4.media.session.PlaybackStateCompat;
 import android.util.Log;
 
 import java.io.IOException;
@@ -70,5 +71,10 @@ public class StreamingSessionCallback extends MediaSessionCompat.Callback {
         super.onStop();
         if(mediaSession.isActive()) mediaSession.setActive(false);
         player.stop();
+    }
+
+    public PlaybackStateCompat getPlayState()
+    {
+        
     }
 }

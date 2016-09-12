@@ -1,14 +1,10 @@
 package maneframe.ai_ubuntu_achromic.appinventor.pawprintradio;
 
 import android.app.Notification;
-import android.content.BroadcastReceiver;
-import android.content.Context;
-import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
-import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -58,7 +54,7 @@ public class RadioActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 if(session == null) {
-                    session = new StreamingSession(getApplicationContext());
+                    session = StreamingSession.getInstance(getApplicationContext());
                     session.setOnPlaybackStatusChangeListener(getFabUIPlaybackChangeListener(fab));
                 }
 

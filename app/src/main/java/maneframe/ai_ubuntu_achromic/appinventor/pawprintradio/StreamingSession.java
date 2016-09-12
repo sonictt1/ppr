@@ -33,6 +33,7 @@ public class StreamingSession extends MediaSessionCompat.Callback {
     private Notification mediaNotification;
     private AudioManager audioManager;
     private OnPlaybackStatusChangeListener listener;
+    private static StreamingSession session;
 
     private BroadcastReceiver noisyReciever =
         new BroadcastReceiver() {
@@ -42,7 +43,7 @@ public class StreamingSession extends MediaSessionCompat.Callback {
             }
         };
 
-    public StreamingSession(Context context) {
+    private StreamingSession(Context context) {
         super();
         audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
         if(!requestAudioFocus()) {
@@ -79,6 +80,11 @@ public class StreamingSession extends MediaSessionCompat.Callback {
         mediaSession.setPlaybackState(getPausedPlayState());
     }
 
+    public static StreamingSession getInstance(Context context) {
+        if(session == null) return session = new StreamingSession(context);
+        return session;
+    }
+
     public MediaSessionCompat getMediaSession(){
         return mediaSession;
     }
@@ -104,6 +110,7 @@ public class StreamingSession extends MediaSessionCompat.Callback {
     public void onPause() {
         super.onPause();
         mediaSession.setPlaybackState(getPausedPlayState());
+        notifyUser_Pause();
         player.pause();
         if(listener != null) listener.onPauseMedia();
     }
@@ -169,13 +176,6 @@ public class StreamingSession extends MediaSessionCompat.Callback {
         };
     }
 
-    private void setUpNotification() {
-        mediaNotification = new NotificationCompat.Builder(mediaContext).setSmallIcon(R.drawable.ic_play_arrow_white_24dp)
-                .setStyle(new NotificationCompat.MediaStyle().setMediaSession(getMediaSession().getSessionToken())).build();
-        NotificationManager notifyManager = (NotificationManager) mediaContext.getSystemService(Context.NOTIFICATION_SERVICE);
-        notifyManager.notify(mediaContext.getResources().getInteger(R.integer.notification_request_id), mediaNotification);
-    }
-
     private boolean requestAudioFocus() {
         int requestResult = audioManager.requestAudioFocus(getFocusChangeListener(), AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN);
 
@@ -218,7 +218,16 @@ public class StreamingSession extends MediaSessionCompat.Callback {
     private void notifyUser_Play() {
         NotificationCompat.Builder builder = MediaStyleHelper.from(mediaContext, mediaSession);
         builder.setSmallIcon(R.drawable.ic_play_arrow_white_24dp).setColor(ContextCompat.getColor(mediaContext, R.color.colorPrimaryDark));
-        builder.addAction(new NotificationCompat.Action(R.drawable.ic_pause_white_24dp, "Pause", MediaButtonReceiver.buildMediaButtonPendingIntent(mediaContext, PlaybackStateCompat.ACTION_PLAY_PAUSE)));
+        builder.addAction(new NotificationCompat.Action(R.drawable.ic_pause_white_24dp, "Pause", MediaButtonReceiver.buildMediaButtonPendingIntent(mediaContext, PlaybackStateCompat.ACTION_PAUSE)));
+        builder.setStyle(new NotificationCompat.MediaStyle().setShowActionsInCompactView(0).setMediaSession(mediaSession.getSessionToken()));
+        NotificationManager manager = (NotificationManager) mediaContext.getSystemService(Context.NOTIFICATION_SERVICE);
+        manager.notify(mediaContext.getResources().getInteger(R.integer.notification_request_id), builder.build());
+    }
+
+    private void notifyUser_Pause() {
+        NotificationCompat.Builder builder = MediaStyleHelper.from(mediaContext, mediaSession);
+        builder.setSmallIcon(R.drawable.ic_play_arrow_white_24dp).setColor(ContextCompat.getColor(mediaContext, R.color.colorPrimaryDark));
+        builder.addAction(new NotificationCompat.Action(R.drawable.ic_play_arrow_white_24dp, "Pause", MediaButtonReceiver.buildMediaButtonPendingIntent(mediaContext, PlaybackStateCompat.ACTION_PLAY)));
         builder.setStyle(new NotificationCompat.MediaStyle().setShowActionsInCompactView(0).setMediaSession(mediaSession.getSessionToken()));
         NotificationManager manager = (NotificationManager) mediaContext.getSystemService(Context.NOTIFICATION_SERVICE);
         manager.notify(mediaContext.getResources().getInteger(R.integer.notification_request_id), builder.build());
@@ -236,11 +245,11 @@ public class StreamingSession extends MediaSessionCompat.Callback {
             if (Intent.ACTION_MEDIA_BUTTON.equals((intent.getAction()))) {
                 KeyEvent event = (KeyEvent) intent.getParcelableExtra(Intent.EXTRA_KEY_EVENT);
                 if (KeyEvent.KEYCODE_MEDIA_PLAY == event.getKeyCode()) {
-                    onPlay();
+                    getInstance(context).onPlay();
                 } else if (KeyEvent.KEYCODE_MEDIA_PAUSE == event.getKeyCode()) {
-                    onPause();
+                    getInstance(context).onPause();
                 } else if (KeyEvent.KEYCODE_MEDIA_STOP == event.getKeyCode()) {
-                    onStop();
+                    getInstance(context).onStop();
                 }
             }
         }

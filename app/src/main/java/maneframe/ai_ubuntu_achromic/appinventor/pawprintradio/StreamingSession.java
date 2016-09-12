@@ -17,6 +17,7 @@ import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
 import android.support.v7.app.NotificationCompat;
 import android.util.Log;
+import android.view.KeyEvent;
 
 import java.io.IOException;
 
@@ -25,12 +26,13 @@ import java.io.IOException;
  */
 public class StreamingSession extends MediaSessionCompat.Callback {
 
-    ComponentName mediaButtonReceiver;
-    MediaSessionCompat mediaSession;
-    MediaPlayer player;
-    Context mediaContext;
-    Notification mediaNotification;
-    AudioManager audioManager;
+    private ComponentName mediaButtonReceiver;
+    private MediaSessionCompat mediaSession;
+    private MediaPlayer player;
+    private Context mediaContext;
+    private Notification mediaNotification;
+    private AudioManager audioManager;
+    private OnPlaybackStatusChangeListener listener;
 
     private BroadcastReceiver noisyReciever =
         new BroadcastReceiver() {
@@ -92,9 +94,10 @@ public class StreamingSession extends MediaSessionCompat.Callback {
         super.onPlay();
         if(!mediaSession.isActive()) mediaSession.setActive(true);
         mediaSession.setPlaybackState(getPlayingPlayState());
-        setUpNotification();
+        notifyUser_Play();
         registerNoisyReceiver();
         player.start();
+        if(listener != null) listener.onPlayMedia();
     }
 
     @Override
@@ -102,6 +105,7 @@ public class StreamingSession extends MediaSessionCompat.Callback {
         super.onPause();
         mediaSession.setPlaybackState(getPausedPlayState());
         player.pause();
+        if(listener != null) listener.onPauseMedia();
     }
 
     @Override
@@ -113,6 +117,7 @@ public class StreamingSession extends MediaSessionCompat.Callback {
         mediaSession.setPlaybackState(getStoppedPlayState());
         unregisterNoisyReceiver();
         player.release();
+        if(listener != null) listener.onStopMedia();
     }
 
     private PlaybackStateCompat getConnectingPlayState()
@@ -199,6 +204,8 @@ public class StreamingSession extends MediaSessionCompat.Callback {
         };
     }
 
+
+
     private void registerNoisyReceiver() {
         IntentFilter filter = new IntentFilter(AudioManager.ACTION_AUDIO_BECOMING_NOISY);
         mediaContext.registerReceiver(noisyReciever, filter);
@@ -217,4 +224,25 @@ public class StreamingSession extends MediaSessionCompat.Callback {
         manager.notify(mediaContext.getResources().getInteger(R.integer.notification_request_id), builder.build());
     }
 
+    public void setOnPlaybackStatusChangeListener(OnPlaybackStatusChangeListener listener) {
+        this.listener = listener;
+    }
+
+    public static class RemoteControlReceiver extends BroadcastReceiver {
+
+        public RemoteControlReceiver() {}
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (Intent.ACTION_MEDIA_BUTTON.equals((intent.getAction()))) {
+                KeyEvent event = (KeyEvent) intent.getParcelableExtra(Intent.EXTRA_KEY_EVENT);
+                if (KeyEvent.KEYCODE_MEDIA_PLAY == event.getKeyCode()) {
+                    onPlay();
+                } else if (KeyEvent.KEYCODE_MEDIA_PAUSE == event.getKeyCode()) {
+                    onPause();
+                } else if (KeyEvent.KEYCODE_MEDIA_STOP == event.getKeyCode()) {
+                    onStop();
+                }
+            }
+        }
+    }
 }

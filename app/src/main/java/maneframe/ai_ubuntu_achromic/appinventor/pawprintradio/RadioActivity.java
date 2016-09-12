@@ -1,10 +1,14 @@
 package maneframe.ai_ubuntu_achromic.appinventor.pawprintradio;
 
 import android.app.Notification;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
+import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -21,22 +25,51 @@ public class RadioActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_radio);
+        setUpFab();
+
+    }
+
+    private void setUpFab() {
         fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
+        fab.setOnClickListener(getFabOnClickListener());
+    }
+
+    private OnPlaybackStatusChangeListener getFabUIPlaybackChangeListener(FloatingActionButton fab) {
+        return new OnPlaybackStatusChangeListener() {
+            @Override
+            public void onPlayMedia() {
+                setFabIcon(R.drawable.ic_pause_white_24dp);
+            }
+
+            @Override
+            public void onPauseMedia() {
+                setFabIcon(R.drawable.ic_play_arrow_white_24dp);
+            }
+
+            @Override
+            public void onStopMedia() {
+                setFabIcon(R.drawable.ic_play_arrow_white_24dp);
+            }
+        };
+    }
+
+    private View.OnClickListener getFabOnClickListener() {
+        return new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if(session == null)
+                if(session == null) {
                     session = new StreamingSession(getApplicationContext());
-                if(session.getMediaPlayer().isPlaying()) {
-                    session.onPause();
-                    setFabIcon(R.drawable.ic_play_arrow_white_24dp);
-                } else {
-                    session.onPlay();
-                    setFabIcon(R.drawable.ic_pause_white_24dp);
+                    session.setOnPlaybackStatusChangeListener(getFabUIPlaybackChangeListener(fab));
                 }
+
+                if(session.getMediaPlayer().isPlaying())
+                    session.onPause();
+                else
+                    session.onPlay();
             }
-        });
+        };
     }
+
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu){

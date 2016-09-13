@@ -9,6 +9,7 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.ProgressBar;
 
 public class RadioActivity extends AppCompatActivity {
 
@@ -16,13 +17,14 @@ public class RadioActivity extends AppCompatActivity {
     int notifyId = 5234;
     Notification mediaNotification;
     StreamingSession session;
+    ProgressBar loadingCircle;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_radio);
         setUpFab();
-
+        loadingCircle = (ProgressBar) findViewById(R.id.loading_circle);
     }
 
     private void setUpFab() {
@@ -32,6 +34,16 @@ public class RadioActivity extends AppCompatActivity {
 
     private OnPlaybackStatusChangeListener getFabUIPlaybackChangeListener(FloatingActionButton fab) {
         return new OnPlaybackStatusChangeListener() {
+            @Override
+            public void onPrepareMedia() {
+                loadingCircle.setVisibility(View.VISIBLE);
+            }
+
+            @Override
+            public void onMediaPrepared() {
+                loadingCircle.setVisibility(View.GONE);
+            }
+
             @Override
             public void onPlayMedia() {
                 setFabIcon(R.drawable.ic_pause_white_24dp);
@@ -54,8 +66,7 @@ public class RadioActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 if(session == null) {
-                    session = StreamingSession.getInstance(getApplicationContext());
-                    session.setOnPlaybackStatusChangeListener(getFabUIPlaybackChangeListener(fab));
+                    session = StreamingSession.getInstance(getApplicationContext(), getFabUIPlaybackChangeListener(fab));
                 }
 
                 if(session.getMediaPlayer().isPlaying())

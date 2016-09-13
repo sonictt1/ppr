@@ -5,10 +5,13 @@ package maneframe.ai_ubuntu_achromic.appinventor.pawprintradio;
  */
 public abstract class OnPlaybackStatusChangeListener {
 
+    public abstract void onPrepareMedia();
+
+    public abstract void onMediaPrepared();
+
     public abstract void onPlayMedia();
 
     public abstract void onPauseMedia();
 
     public abstract void onStopMedia();
-
 }

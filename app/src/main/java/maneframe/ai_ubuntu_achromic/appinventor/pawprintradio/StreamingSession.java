@@ -125,6 +125,7 @@ public class StreamingSession extends MediaSessionCompat.Callback {
         unregisterNoisyReceiver();
         player.release();
         if(listener != null) listener.onStopMedia();
+        dismissNotification();
     }
 
     private PlaybackStateCompat getConnectingPlayState()
@@ -219,18 +220,27 @@ public class StreamingSession extends MediaSessionCompat.Callback {
         NotificationCompat.Builder builder = MediaStyleHelper.from(mediaContext, mediaSession);
         builder.setSmallIcon(R.drawable.ic_play_arrow_white_24dp).setColor(ContextCompat.getColor(mediaContext, R.color.colorPrimaryDark));
         builder.addAction(new NotificationCompat.Action(R.drawable.ic_pause_white_24dp, "Pause", MediaButtonReceiver.buildMediaButtonPendingIntent(mediaContext, PlaybackStateCompat.ACTION_PAUSE)));
+        builder.addAction(new NotificationCompat.Action(R.drawable.ic_stop_white_24dp, "Stop", MediaButtonReceiver.buildMediaButtonPendingIntent(mediaContext, PlaybackStateCompat.ACTION_STOP)));
         builder.setStyle(new NotificationCompat.MediaStyle().setShowActionsInCompactView(0).setMediaSession(mediaSession.getSessionToken()));
         NotificationManager manager = (NotificationManager) mediaContext.getSystemService(Context.NOTIFICATION_SERVICE);
-        manager.notify(mediaContext.getResources().getInteger(R.integer.notification_request_id), builder.build());
+        mediaNotification = builder.build();
+        manager.notify(mediaContext.getResources().getInteger(R.integer.notification_request_id), mediaNotification);
     }
 
     private void notifyUser_Pause() {
         NotificationCompat.Builder builder = MediaStyleHelper.from(mediaContext, mediaSession);
         builder.setSmallIcon(R.drawable.ic_play_arrow_white_24dp).setColor(ContextCompat.getColor(mediaContext, R.color.colorPrimaryDark));
         builder.addAction(new NotificationCompat.Action(R.drawable.ic_play_arrow_white_24dp, "Pause", MediaButtonReceiver.buildMediaButtonPendingIntent(mediaContext, PlaybackStateCompat.ACTION_PLAY)));
+        builder.addAction(new NotificationCompat.Action(R.drawable.ic_stop_white_24dp, "Stop", MediaButtonReceiver.buildMediaButtonPendingIntent(mediaContext, PlaybackStateCompat.ACTION_STOP)));
         builder.setStyle(new NotificationCompat.MediaStyle().setShowActionsInCompactView(0).setMediaSession(mediaSession.getSessionToken()));
         NotificationManager manager = (NotificationManager) mediaContext.getSystemService(Context.NOTIFICATION_SERVICE);
-        manager.notify(mediaContext.getResources().getInteger(R.integer.notification_request_id), builder.build());
+        mediaNotification = builder.build();
+        manager.notify(mediaContext.getResources().getInteger(R.integer.notification_request_id), mediaNotification);
+    }
+
+    private void dismissNotification() {
+        NotificationManager manager = (NotificationManager) mediaContext.getSystemService(Context.NOTIFICATION_SERVICE);
+        manager.cancel(mediaContext.getResources().getInteger(R.integer.notification_request_id));
     }
 
     public void setOnPlaybackStatusChangeListener(OnPlaybackStatusChangeListener listener) {

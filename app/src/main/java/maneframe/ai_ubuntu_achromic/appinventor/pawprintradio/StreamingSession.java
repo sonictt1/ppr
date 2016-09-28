@@ -10,6 +10,7 @@ import android.content.IntentFilter;
 import android.graphics.BitmapFactory;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
+import android.support.annotation.Nullable;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.media.MediaMetadataCompat;
 import android.support.v4.media.session.MediaButtonReceiver;
@@ -23,6 +24,17 @@ import java.io.IOException;
 
 /**
  * Created by Sonic on 8/30/2016.
+ *
+ * This class handles audio playback and Android citizenship.
+ *
+ * It will ask for focus before attempting to play audio and
+ * relinquish focus when another app takes over.
+ *
+ * It will also lower audio volume during notification noises.
+ *
+ * It will grab input from accessories (in-line controls and bluetooth headphones).
+ *
+ * It displays a notification for media control. It also displays controls on Android Wear devices.
  */
 public class StreamingSession extends MediaSessionCompat.Callback {
 
@@ -43,8 +55,12 @@ public class StreamingSession extends MediaSessionCompat.Callback {
             }
         };
 
-    private StreamingSession(Context context) {
+    private StreamingSession(Context context, @Nullable OnPlaybackStatusChangeListener listener) {
         super();
+        if(listener != null) {
+            this.listener = listener;
+            listener.onPrepareMedia();
+        }
         audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
         if(!requestAudioFocus()) {
             Log.e("StreamingSession", "Audio Focus not granted");
@@ -57,6 +73,7 @@ public class StreamingSession extends MediaSessionCompat.Callback {
         mediaSession.setFlags(MediaSessionCompat.FLAG_HANDLES_MEDIA_BUTTONS | MediaSessionCompat.FLAG_HANDLES_TRANSPORT_CONTROLS);
         mediaSession.setCallback(this);
         player = new MediaPlayer();
+        player.setOnPreparedListener(getMediaSessionOnPreparedListener());
 
 
         try {
@@ -78,21 +95,31 @@ public class StreamingSession extends MediaSessionCompat.Callback {
         player.prepareAsync();
         mediaSession.setActive(true);
         mediaSession.setPlaybackState(getPausedPlayState());
+
     }
 
-    public static StreamingSession getInstance(Context context) {
-        if(session == null) return session = new StreamingSession(context);
+    public static StreamingSession getInstance(Context context, @Nullable OnPlaybackStatusChangeListener listener) {
+        if(session == null) return session = new StreamingSession(context, listener);
+        else session.setOnPlaybackStatusChangeListener(listener);
         return session;
+    }
+
+    public static StreamingSession getInstance(Context context)
+    {
+        return getInstance(context, null);
     }
 
     public MediaSessionCompat getMediaSession(){
         return mediaSession;
     }
 
-    @Override
-    public void onPrepare() {
-        super.onPrepare();
-
+    private MediaPlayer.OnPreparedListener getMediaSessionOnPreparedListener() {
+        return new MediaPlayer.OnPreparedListener() {
+            @Override
+            public void onPrepared(MediaPlayer mediaPlayer) {
+                if(listener != null) listener.onMediaPrepared();
+            }
+        };
     }
 
     @Override
